@@ -1,6 +1,4 @@
-# 🔐 Splunk Brute-Force Detector
-
-![Dashboard Preview](https://raw.githubusercontent.com/mortuja001/splunk-brute-force-detector/main/images/dashboard_preview.png)
+#  Splunk Brute-Force Detector
 
 A complete Splunk project to detect and alert brute-force attacks and credential abuse across:
 
@@ -13,30 +11,31 @@ A complete Splunk project to detect and alert brute-force attacks and credential
 
 ## 📊 Features
 
-- 🔍 Brute-force detection for SSH, Windows logon, and Web login POSTs
-- 🧠 Correlation with known threat user-agents (malicious automation tools)
-- 🔔 Alerts via Email & Slack
-- 📈 Sleek Splunk Dashboard for visual analysis
-- 📁 Fully structured deployment folder
+- Brute-force detection for SSH, Windows logon, and Web login POSTs
+- Correlation with known threat user-agents (malicious automation tools)
+- Alerts via Email & Slack
+- Sleek Splunk Dashboard for visual analysis
 - 🛠️ Includes macros, inputs, savedsearches, alert scripts
 
 ---
+## 📊 Dashboard Panels:
+- Linux SSH Brute Force
+- Windows Login Failures
+- Web Login Failures
+- Threat User-Agent Tracker
+  
+![Dashboard Preview](https://raw.githubusercontent.com/mortuja001/splunk-brute-force-detector/main/images/dashboard_preview.png)
 
-## 📁 Folder Structure
-splunk-brute-force-detector/
-├── alerts/
-│ ├── brute_force_alerts.csv # Sample generated alert output
-├── bin/
-│ └── slack_alert.py # Slack alerting script
-├── default/
-│ ├── savedsearches.conf # Saved searches (alerts)
-│ ├── macros.conf # Macros for clean SPL
-│ └── inputs.conf # Scheduled input configuration
-├── local/
-│ └── README-placeholder.txt # Place for local overrides
-├── dashboards/
-│ └── brute_force_dashboard.xml # Splunk dashboard XML
-├── images/
-│ └── dashboard_preview.png # Dashboard screenshot
-└── README.md
+---
+
+## 🛠️ Deployment:
+1. Import the dashboard XML via Splunk Web > Dashboards > Import.
+2. Configure alerts via `Settings > Searches, Reports, and Alerts`.
+3. Adjust thresholds as needed.
+
+---
+
+## Reference: 
+
+
 
