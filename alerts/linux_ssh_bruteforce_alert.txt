@@ -1,0 +1,11 @@
+## linux_ssh_bruteforce_alert ##
+
+index=linux "Failed password"
+| rex "Failed password for (invalid user )?(?P<user>\w+) from (?P<src_ip>\d{1,3}(?:\.\d{1,3}){3})"
+| bin _time span=5m
+| stats count as failed_count by _time, src_ip, user, host
+| where failed_count > 5
+| rename user as User_Name, _time as Time, host as Host_Name
+| convert ctime(Time)
+| table Time, User_Name, Host_Name, src_ip, failed_count
+| sort failed_count desc

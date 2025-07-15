@@ -1,0 +1,11 @@
+index=windows source="WinEventLog:Security" EventCode=4625
+| rex field=_raw "Source Network Address=(?<src_ip>\S+)" 
+| eval LogonType=coalesce(Logon_Type, LogonType)
+| where LogonType!=5 AND 'Source_Network_Address'!="-"
+| bin _time span=5m
+| stats count as failed_count by _time, user, src_user, src_ip, host
+| rename user as User_Name, _time as Time, host as Host_Name
+| where failed_count > 5
+| convert ctime(Time)
+| table Time, User_Name, Host_Name, src_ip, failed_count
+| sort failed_count desc

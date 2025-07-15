@@ -1,0 +1,10 @@
+(index=web OR index=nginx) http_method=POST uri_path="/login"
+| rex field=_raw "^(?P<src_ip>\d{1,3}(?:\.\d{1,3}){3})"
+| rex field=_raw "\"(?P<user_agent>[^\"]+?)\"$"
+| bin _time span=1d
+| stats count as failed_count by _time, src_ip, host, dest_owner, uri_path, http_referrer, user_agent
+| where failed_count > 20
+| rename _time as Time
+| convert ctime(Time)
+| sort failed_count desc
+| table Time, src_ip, host, dest_owner, uri_path, http_referrer, user_agent, failed_count
