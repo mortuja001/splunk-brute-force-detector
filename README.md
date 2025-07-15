@@ -9,7 +9,7 @@ A complete Splunk project to detect and alert brute-force attacks and credential
 
 ---
 
-## 📊 Features
+## Features::
 
 - Brute-force detection for SSH, Windows logon, and Web login POSTs
 - Correlation with known threat user-agents (malicious automation tools)
