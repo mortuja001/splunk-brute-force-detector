@@ -1,0 +1,126 @@
+<dashboard version="1.1" theme="dark">
+<label>Brute-Force &amp; Login Abuse Dashboard</label>
+  <row>
+    <panel>
+      <title>Linux SSH Brute-Force (Last 24h)</title>
+      <table>
+        <search>
+          <query>index=linux "Failed password"
+| rex "Failed password for (invalid user )?(?P&lt;user&gt;\w+) from (?P&lt;src_ip&gt;\d{1,3}(?:\.\d{1,3}){3})"
+| bin _time span=5m
+| stats count as failed_count by _time, src_ip, user, host
+| where failed_count &gt; 5
+| rename user as User_Name, _time as Time, host as Host_Name
+| convert ctime(Time)
+| table Time, User_Name, Host_Name, src_ip, failed_count
+| sort failed_count desc</query>
+        </search>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Windows Failed Logins (EventCode=4625)</title>
+      <table>
+        <search>
+          <query>index=windows source="WinEventLog:Security" EventCode=4625
+| rex field=_raw "Source Network Address=(?&lt;src_ip&gt;\S+)" 
+| eval LogonType=coalesce(Logon_Type, LogonType)
+| where LogonType!=5 AND 'Source_Network_Address'!="-"
+| bin _time span=5m
+| stats count as failed_count by _time, user,src_user, src_ip, host
+| rename user as User_Name, _time as Time, host as Host_Name
+| where failed_count &gt; 5
+| convert ctime(Time)
+| table Time, User_Name, Host_Name, src_ip, failed_count
+| sort failed_count desc</query>
+        </search>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Web Login Brute-Force Detection</title>
+      <table>
+        <search>
+          <query>(index=web OR index=nginx) http_method=POST uri_path="/login"
+| rex field=_raw "^(?&lt;src_ip&gt;\d{1,3}(?:\.\d{1,3}){3})"
+| rex field=_raw "\"(?&lt;user_agent&gt;[^"]+?)\"$"
+| bin _time span=1d
+| stats count as failed_count by _time, src_ip, host, dest_owner, uri_path, http_referrer, user_agent
+| where failed_count &gt; 20
+| rename _time as Time
+| convert ctime(Time)
+| sort failed_count desc
+| table Time, src_ip, host, dest_owner, uri_path, http_referrer, user_agent, failed_count</query>
+        </search>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Threat User-Agent Detection</title>
+      <table>
+        <search>
+          <query>(index=web OR index=nginx) http_method=POST uri_path="/login"
+| rex field=_raw "^(?&lt;src_ip&gt;\d{1,3}(?:\.\d{1,3}){3})"
+| rex field=_raw "\"(?&lt;user_agent&gt;[^"]+?)\"$"
+| eval threat_agent=if(match(lower(user_agent), "curl|sqlmap|python-requests|nmap|wget|nikto|masscan|libwww-perl"), "Yes", "No")
+| bin _time span=1d
+| stats count as failed_count by _time, src_ip, host, dest_owner, uri_path, http_referrer, user_agent, threat_agent
+| where failed_count &gt; 20
+| rename _time as Time
+| convert ctime(Time)
+| sort failed_count desc
+| table Time, src_ip, host, dest_owner, uri_path, http_referrer, user_agent, threat_agent, failed_count</query>
+        </search>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Top Brute-Forcing IPs</title>
+      <chart>
+        <search>
+          <query>(index=linux OR index=windows) ("Failed password" OR EventCode=4625)
+| rex "from (?&lt;src_ip&gt;\d{1,3}(?:\.\d{1,3}){3})"
+| stats count by src_ip
+| sort -count</query>
+        </search>
+        <option name="charting.chart">bar</option>
+      </chart>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Login Failure Heatmap Over Time</title>
+      <chart>
+        <search>
+          <query>(index=linux OR index=windows) ("Failed password" OR EventCode=4625)
+| timechart span=1m count by host</query>
+        </search>
+        <option name="charting.chart">column</option>
+      </chart>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Threat User-Agent Pie Chart</title>
+      <chart>
+        <search>
+          <query>(index=web OR index=nginx) http_method=POST uri_path="/login"
+| rex field=_raw "\"(?&lt;user_agent&gt;[^"]+?)\"$"
+| eval is_threat=if(match(lower(user_agent), "curl|sqlmap|python-requests|wget|nmap|nikto"), "Threat", "Normal")
+| stats count by is_threat</query>
+        </search>
+        <option name="charting.chart">pie</option>
+      </chart>
+    </panel>
+  </row>
+</dashboard>
